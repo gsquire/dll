@@ -51,7 +51,7 @@ func TestSingleForLoopWithDefer(t *testing.T) {
 	}
 
 	if len(reports) != 1 {
-		t.Errorf("expected one reports; got %d", len(reports))
+		t.Errorf("expected one report; got %d", len(reports))
 	}
 }
 
@@ -76,6 +76,6 @@ func TestNestedDefer(t *testing.T) {
 	}
 
 	if len(reports) != 1 {
-		t.Errorf("expected one reports; got %d", len(reports))
+		t.Errorf("expected one report; got %d", len(reports))
 	}
 }
