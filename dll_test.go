@@ -79,3 +79,52 @@ func TestNestedDefer(t *testing.T) {
 		t.Errorf("expected one report; got %d", len(reports))
 	}
 }
+
+func TestBlockDefer(t *testing.T) {
+	source := `package main
+
+	import "fmt"
+
+	func main() {
+		for i := 0; i < len(list); i++ {
+			{
+				defer fmt.Println(i)
+			}
+		}
+	}`
+
+	reports, err := gather(source, false)
+	if err != nil {
+		t.Errorf("expected no error; got %s", err)
+	}
+
+	if len(reports) != 1 {
+		t.Errorf("expected one report; got %d", len(reports))
+	}
+
+}
+
+func TestRangeDefer(t *testing.T) {
+	source := `package main
+
+	import "fmt"
+
+	func main() {
+
+		list := []int{1, 2, 3}
+
+		for _, x := range list {
+			defer fmt.Println(x)
+		}
+	}`
+
+	reports, err := gather(source, false)
+	if err != nil {
+		t.Errorf("expected no error; got %s", err)
+	}
+
+	if len(reports) != 1 {
+		t.Errorf("expected one report; got %d", len(reports))
+	}
+
+}
