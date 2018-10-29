@@ -14,10 +14,8 @@ func TestDLL(t *testing.T) {
 			source: `
 				package main
 
-				import "fmt"
-
 				func main() {
-					fmt.Println("Hello!")
+					println("Hello!")
 				}
 			`,
 		},
@@ -27,11 +25,9 @@ func TestDLL(t *testing.T) {
 			source: `
 				package main
 
-				import "fmt"
-
 				func main() {
 					for i := 0; i < 5; i++ {
-						defer fmt.Println("defer")
+						defer println("defer")
 					}
 				}
 			`,
@@ -42,13 +38,10 @@ func TestDLL(t *testing.T) {
 			source: `
 				package main
 
-				import "fmt"
-
 				func main() {
 					list := []int{1, 2, 3, 4, 5, 6, 7}
-
 					for _, x := range list {
-						defer fmt.Println(x)
+						defer println(x)
 					}
 				}
 			`,
@@ -59,14 +52,11 @@ func TestDLL(t *testing.T) {
 			source: `
 				package main
 
-				import "fmt"
-
 				func main() {
 					list := []int{1, 2, 3, 4, 5, 6, 7}
-
 					for _, i := range list {
 						for j := 0; j < i; j++ {
-							defer fmt.Println(j)
+							defer println(j)
 						}
 					}
 				}
@@ -78,12 +68,10 @@ func TestDLL(t *testing.T) {
 			source: `
 				package main
 
-				import "fmt"
-
 				func main() {
 					for i := 0; i < 5; i++ {
 						{
-							defer fmt.Println("defer")
+							defer println("defer")
 						}
 					}
 				}
@@ -95,12 +83,10 @@ func TestDLL(t *testing.T) {
 			source: `
 				package main
 
-				import "fmt"
-
 				func main() {
 					for i := 0; i < 5; i++ {
 						if true {
-							defer fmt.Println("defer")
+							defer println("defer")
 						}
 					}
 				}
@@ -112,12 +98,10 @@ func TestDLL(t *testing.T) {
 			source: `
 				package main
 
-				import "fmt"
-
 				func main() {
 					for i := 0; i < 5; i++ {
 						func() {
-							defer fmt.Println("defer")
+							defer println("defer")
 						}()
 					}
 				}
