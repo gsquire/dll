@@ -49,27 +49,31 @@ func gather(source string, asFile bool) ([]*report, error) {
 		if n == nil {
 			return nil
 		}
-		if _, ok := n.(*ast.RangeStmt); ok {
+		switch n.(type) {
+		case *ast.RangeStmt, *ast.ForStmt:
 			return findDefer
+		default:
+			return findLoop
 		}
-		if _, ok := n.(*ast.ForStmt); ok {
-			return findDefer
-		}
-		return findLoop
 	})
 
 	findDefer = visitFunc(func(n ast.Node) ast.Visitor {
 		if n == nil {
 			return nil
 		}
-		if stmt, ok := n.(*ast.DeferStmt); ok {
+		switch n := n.(type) {
+		case *ast.DeferStmt:
 			source := fset.File(f.Pos())
 			reports = append(reports, &report{
 				sourceName: source.Name(),
-				lineNumber: source.Line(stmt.Pos()),
+				lineNumber: source.Line(n.Pos()),
 			})
+			return findDefer
+		case *ast.FuncLit:
+			return findLoop
+		default:
+			return findDefer
 		}
-		return findDefer
 	})
 
 	ast.Walk(findLoop, f)

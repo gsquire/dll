@@ -152,3 +152,29 @@ func TestRangeDefer(t *testing.T) {
 	}
 
 }
+
+func TestFuncLitDefer(t *testing.T) {
+	source := `package main
+
+	import "fmt"
+
+	func main() {
+
+		list := []int{1, 2, 3}
+
+		for _, x := range list {
+			func() {
+				defer fmt.Println(x)
+			}()
+		}
+	}`
+
+	reports, err := gather(source, false)
+	if err != nil {
+		t.Errorf("expected no error; got %s", err)
+	}
+
+	if len(reports) > 0 {
+		t.Errorf("expected no reports; got %d", len(reports))
+	}
+}
