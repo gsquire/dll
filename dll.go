@@ -17,39 +17,10 @@ func (r *report) String() string {
 	return fmt.Sprintf("%s: found defer statement in for loop at line number: %d", r.sourceName, r.lineNumber)
 }
 
-type walker struct {
-	fset    *token.FileSet
-	filePos token.Pos
-	reports []*report
-}
+type visitFunc func(ast.Node) ast.Visitor
 
-func newWalker(fset *token.FileSet, filePos token.Pos) *walker {
-	return &walker{
-		fset:    fset,
-		filePos: filePos,
-		reports: make([]*report, 0),
-	}
-}
-
-func (w *walker) Visit(n ast.Node) ast.Visitor {
-	if n == nil {
-		return nil
-	}
-
-	source := w.fset.File(w.filePos)
-	sourceName := source.Name()
-
-	switch ty := n.(type) {
-	case *ast.ForStmt:
-		for _, stmt := range ty.Body.List {
-			if d, ok := stmt.(*ast.DeferStmt); ok {
-				w.reports = append(w.reports,
-					&report{sourceName: sourceName, lineNumber: source.Line(d.Pos())})
-			}
-		}
-	}
-
-	return w
+func (vf visitFunc) Visit(node ast.Node) ast.Visitor {
+	return vf(node)
 }
 
 func gather(source string, asFile bool) ([]*report, error) {
@@ -69,9 +40,45 @@ func gather(source string, asFile bool) ([]*report, error) {
 		return nil, err
 	}
 
-	w := newWalker(fset, f.Pos())
-	ast.Walk(w, f)
-	return w.reports, nil
+	var (
+		reports             []*report
+		findLoop, findDefer ast.Visitor
+	)
+
+	findLoop = visitFunc(func(n ast.Node) ast.Visitor {
+		if n == nil {
+			return nil
+		}
+		switch n.(type) {
+		case *ast.RangeStmt, *ast.ForStmt:
+			return findDefer
+		default:
+			return findLoop
+		}
+	})
+
+	findDefer = visitFunc(func(n ast.Node) ast.Visitor {
+		if n == nil {
+			return nil
+		}
+		switch n := n.(type) {
+		case *ast.DeferStmt:
+			source := fset.File(f.Pos())
+			reports = append(reports, &report{
+				sourceName: source.Name(),
+				lineNumber: source.Line(n.Pos()),
+			})
+			return findDefer
+		case *ast.FuncLit:
+			return findLoop
+		default:
+			return findDefer
+		}
+	})
+
+	ast.Walk(findLoop, f)
+
+	return reports, nil
 }
 
 func main() {
