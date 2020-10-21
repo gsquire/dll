@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"sync"
 )
 
 type report struct {
@@ -84,16 +85,37 @@ func gather(source string, asFile bool) ([]*report, error) {
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Fprintln(os.Stderr, "no source files supplied")
+		os.Exit(1)
 	}
 
-	for _, source := range os.Args[1:] {
-		r, err := gather(source, true)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error parsing %s: %s\n", source, err)
-			continue
+	files := os.Args[1:]
+	fileCount := len(files)
+	rc := make(chan []*report, fileCount)
+
+	go func() {
+		var wg sync.WaitGroup
+		wg.Add(fileCount)
+
+		for _, source := range files {
+			go func(source string) {
+				defer wg.Done()
+				r, err := gather(source, true)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "error parsing %s: %s\n", source, err)
+					rc <- []*report{}
+					return
+				}
+				rc <- r
+			}(source)
 		}
-		for _, rep := range r {
-			fmt.Println(rep)
+
+		wg.Wait()
+		close(rc)
+	}()
+
+	for reports := range rc {
+		for _, report := range reports {
+			fmt.Println(report)
 		}
 	}
 }
