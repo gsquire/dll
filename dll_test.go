@@ -159,6 +159,12 @@ func Test_splitFilesIntoParts(t *testing.T) {
 			expectedParts: 1,
 		},
 		{
+			name:          "should split one files into zero part",
+			files:         getFileArray(1),
+			parts:         0,
+			expectedParts: 1,
+		},
+		{
 			name:          "should split two files into one part",
 			files:         getFileArray(2),
 			parts:         1,
@@ -188,6 +194,12 @@ func Test_splitFilesIntoParts(t *testing.T) {
 			parts:         3,
 			expectedParts: 2,
 		},
+		{
+			name:          "should split ten files into three part",
+			files:         getFileArray(10),
+			parts:         3,
+			expectedParts: 3,
+		},
 	}
 
 	for _, test := range tests {
@@ -197,6 +209,24 @@ func Test_splitFilesIntoParts(t *testing.T) {
 			if len(got) != test.expectedParts {
 				t.Fatalf("Expect to split into '%d' but got '%d'", test.expectedParts, len(got))
 			}
+
+			for _, files := range got {
+				if len(files) < 1 {
+					t.Fatalf("Expected to contain at least on file but got none")
+				}
+			}
 		})
 	}
+
+	t.Run("should split empty files into one part", func(t *testing.T) {
+		files := []string{}
+		parts := 1
+
+		got := len(splitFilesIntoParts(files, parts))
+		want := 1
+
+		if got != want {
+			t.Fatalf("Expected a length of %d but got %d", want, got)
+		}
+	})
 }

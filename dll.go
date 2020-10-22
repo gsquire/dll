@@ -130,21 +130,30 @@ func main() {
 func splitFilesIntoParts(files []string, parts int) [][]string {
 	fileCount := len(files)
 
-	if parts == 1 || fileCount == 1 {
+	if parts <= 1 {
 		return [][]string{files}
 	}
 
-	for (fileCount % parts) != 0 {
-		parts--
+	// if there are more parts than files, it tries to find the next smallest number to destribute them equally.
+	if fileCount < parts {
+		for (fileCount % parts) != 0 {
+			parts--
+		}
 	}
 
 	filesPerCPU := fileCount / parts
-
 	fileParts := make([][]string, 0, parts)
-	x := 0
+	lastIndex := 0
 	for i := 0; i < parts; i++ {
-		fileParts = append(fileParts, files[x:(x+filesPerCPU)])
-		x = x + filesPerCPU
+		fileParts = append(fileParts, files[lastIndex:(lastIndex+filesPerCPU)])
+		lastIndex = lastIndex + filesPerCPU
+	}
+
+	// if not all files could be splitted equally it adds the missing ones to the first part.
+	if filesPerCPU*parts != fileCount {
+		firstpart := fileParts[0]
+		firstpart = append(firstpart, files[filesPerCPU*parts:]...)
+		fileParts[0] = firstpart
 	}
 
 	return fileParts
