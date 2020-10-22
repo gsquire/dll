@@ -94,7 +94,7 @@ func main() {
 
 	reportsChannel := make(chan []*report, fileCount)
 	cpuCount := runtime.NumCPU()
-	filesPerCore := splitFilesIntoParts(files, cpuCount)
+	filesPerCore := splitArrayIntoParts(files, cpuCount)
 
 	go func() {
 		var wg sync.WaitGroup
@@ -127,34 +127,34 @@ func main() {
 	}
 }
 
-func splitFilesIntoParts(files []string, parts int) [][]string {
-	fileCount := len(files)
+func splitArrayIntoParts(array []string, parts int) [][]string {
+	arraySize := len(array)
 
 	if parts <= 1 {
-		return [][]string{files}
+		return [][]string{array}
 	}
 
-	// if there are more parts than files, it tries to find the next smallest number to destribute them equally.
-	if fileCount < parts {
-		for (fileCount % parts) != 0 {
+	// if there are more parts than strings, it tries to find the next smallest number to destribute them equally.
+	if arraySize < parts {
+		for (arraySize % parts) != 0 {
 			parts--
 		}
 	}
 
-	filesPerCPU := fileCount / parts
-	fileParts := make([][]string, 0, parts)
+	stringsPerPart := arraySize / parts
+	arrayParts := make([][]string, 0, parts)
 	lastIndex := 0
 	for i := 0; i < parts; i++ {
-		fileParts = append(fileParts, files[lastIndex:(lastIndex+filesPerCPU)])
-		lastIndex = lastIndex + filesPerCPU
+		arrayParts = append(arrayParts, array[lastIndex:(lastIndex+stringsPerPart)])
+		lastIndex = lastIndex + stringsPerPart
 	}
 
-	// if not all files could be splitted equally it adds the missing ones to the first part.
-	if filesPerCPU*parts != fileCount {
-		firstpart := fileParts[0]
-		firstpart = append(firstpart, files[filesPerCPU*parts:]...)
-		fileParts[0] = firstpart
+	// if not all strings could be splitted equally it will adds the missing ones to the first part.
+	if stringsPerPart*parts != arraySize {
+		firstpart := arrayParts[0]
+		firstpart = append(firstpart, array[stringsPerPart*parts:]...)
+		arrayParts[0] = firstpart
 	}
 
-	return fileParts
+	return arrayParts
 }

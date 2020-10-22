@@ -137,66 +137,66 @@ func TestErrorParsing(t *testing.T) {
 	}
 }
 
-func Test_splitFilesIntoParts(t *testing.T) {
-	getFileArray := func(amount int) []string {
-		files := make([]string, 0, amount)
+func Test_splitArrayIntoParts(t *testing.T) {
+	getStringArray := func(amount int) []string {
+		strings := make([]string, 0, amount)
 		for i := 0; i < amount; i++ {
-			files = append(files, "foo")
+			strings = append(strings, "foo")
 		}
-		return files
+		return strings
 	}
 
 	tests := []struct {
 		name          string
-		files         []string
+		strings       []string
 		parts         int
 		expectedParts int
 	}{
 		{
-			name:          "should split one file into one part",
-			files:         getFileArray(1),
+			name:          "should split the array with one string into one part",
+			strings:       getStringArray(1),
 			parts:         1,
 			expectedParts: 1,
 		},
 		{
-			name:          "should split one files into zero part",
-			files:         getFileArray(1),
+			name:          "should split the array with one string into zero part",
+			strings:       getStringArray(1),
 			parts:         0,
 			expectedParts: 1,
 		},
 		{
-			name:          "should split two files into one part",
-			files:         getFileArray(2),
+			name:          "should split the array with two strings into one part",
+			strings:       getStringArray(2),
 			parts:         1,
 			expectedParts: 1,
 		},
 		{
-			name:          "should split two files into four part",
-			files:         getFileArray(2),
+			name:          "should split the array with two strings into four part",
+			strings:       getStringArray(2),
 			parts:         4,
 			expectedParts: 2,
 		},
 		{
-			name:          "should split one file into two part",
-			files:         getFileArray(1),
+			name:          "should split the array with one string into two part",
+			strings:       getStringArray(1),
 			parts:         2,
 			expectedParts: 1,
 		},
 		{
-			name:          "should split four files into two part",
-			files:         getFileArray(4),
+			name:          "should split the array with four strings into two part",
+			strings:       getStringArray(4),
 			parts:         2,
 			expectedParts: 2,
 		},
 		{
-			name:          "should split two files into three part",
-			files:         getFileArray(2),
+			name:          "should split the array with two strings into three part",
+			strings:       getStringArray(2),
 			parts:         3,
 			expectedParts: 2,
 		},
 		{
-			name:          "should split ten files into three part",
-			files:         getFileArray(10),
+			name:          "should split the array with ten strings into three part",
+			strings:       getStringArray(10),
 			parts:         3,
 			expectedParts: 3,
 		},
@@ -204,25 +204,25 @@ func Test_splitFilesIntoParts(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := splitFilesIntoParts(test.files, test.parts)
+			got := splitArrayIntoParts(test.strings, test.parts)
 
 			if len(got) != test.expectedParts {
-				t.Fatalf("Expect to split into '%d' but got '%d'", test.expectedParts, len(got))
+				t.Fatalf("Expect to split the array into '%d' but got '%d'", test.expectedParts, len(got))
 			}
 
 			for _, files := range got {
 				if len(files) < 1 {
-					t.Fatalf("Expected to contain at least on file but got none")
+					t.Fatalf("Expected to contain at least on string but got none")
 				}
 			}
 		})
 	}
 
-	t.Run("should split empty files into one part", func(t *testing.T) {
-		files := []string{}
+	t.Run("should split the empty array into one part", func(t *testing.T) {
+		strings := []string{}
 		parts := 1
 
-		got := len(splitFilesIntoParts(files, parts))
+		got := len(splitArrayIntoParts(strings, parts))
 		want := 1
 
 		if got != want {
