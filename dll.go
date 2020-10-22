@@ -101,19 +101,7 @@ func main() {
 
 		for _, files := range filesPerCore {
 			wg.Add(1)
-
-			go func(files []string) {
-				defer wg.Done()
-				for _, source := range files {
-					r, err := gather(source, true)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "error parsing %s: %s\n", source, err)
-						reportsChannel <- []*report{}
-						return
-					}
-					reportsChannel <- r
-				}
-			}(files)
+			go analyseFiles(files, reportsChannel, &wg)
 		}
 
 		wg.Wait()
@@ -121,9 +109,26 @@ func main() {
 	}()
 
 	for reports := range reportsChannel {
-		for _, report := range reports {
-			fmt.Println(report)
+		printReports(reports)
+	}
+}
+
+func analyseFiles(files []string, c chan []*report, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for _, source := range files {
+		r, err := gather(source, true)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error parsing %s: %s\n", source, err)
+			c <- []*report{}
+			return
 		}
+		c <- r
+	}
+}
+
+func printReports(reports []*report) {
+	for _, report := range reports {
+		fmt.Println(report)
 	}
 }
 
