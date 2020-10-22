@@ -136,3 +136,67 @@ func TestErrorParsing(t *testing.T) {
 		t.Error("expected error but got nil")
 	}
 }
+
+func TestGetFilesForEachCPUCore(t *testing.T) {
+	tests := []struct {
+		name     string
+		files    []string
+		cpuCount int
+		expected [][]string
+	}{
+		{
+			name:     "One file one core",
+			files:    []string{"foo"},
+			cpuCount: 1,
+			expected: [][]string{{"foo"}},
+		},
+		{
+			name:     "Tow files one core",
+			files:    []string{"foo", "bar"},
+			cpuCount: 1,
+			expected: [][]string{{"foo", "bar"}},
+		},
+		{
+			name:     "Tow files four cores",
+			files:    []string{"foo", "bar"},
+			cpuCount: 4,
+			expected: [][]string{{"foo"}, {"bar"}},
+		},
+		{
+			name:     "One file tow cores",
+			files:    []string{"foo"},
+			cpuCount: 2,
+			expected: [][]string{{"foo"}},
+		},
+		{
+			name:     "Four files tow cores",
+			files:    []string{"foo", "bar", "foobar", "barfoo"},
+			cpuCount: 2,
+			expected: [][]string{{"foo", "bar"}, {"foobar", "barfoo"}},
+		},
+		{
+			name:     "Tow file three cores",
+			files:    []string{"foo", "bar"},
+			cpuCount: 3,
+			expected: [][]string{{"foo"}, {"bar"}},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := getFilesForEachCPUCore(test.files, test.cpuCount)
+
+			if len(got) != len(test.expected) {
+				t.Fatalf("Expect parts to be equal. got: '%d' slices but expected '%d'", len(got), len(test.expected))
+			}
+
+			for oi, gotPart := range got {
+				for i, gotString := range gotPart {
+					if gotString != test.expected[oi][i] {
+						t.Fatalf("Want: %v\n\nGot: %v", test.expected, got)
+					}
+				}
+			}
+		})
+	}
+}

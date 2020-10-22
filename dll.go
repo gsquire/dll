@@ -6,6 +6,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"runtime"
 	"sync"
 )
 
@@ -90,32 +91,62 @@ func main() {
 
 	files := os.Args[1:]
 	fileCount := len(files)
-	rc := make(chan []*report, fileCount)
+
+	reportsChannel := make(chan []*report, fileCount)
+	cpuCount := runtime.NumCPU()
+	filesPerCore := getFilesForEachCPUCore(files, cpuCount)
 
 	go func() {
 		var wg sync.WaitGroup
-		wg.Add(fileCount)
 
-		for _, source := range files {
-			go func(source string) {
+		for _, files := range filesPerCore {
+			wg.Add(1)
+
+			go func(files []string) {
 				defer wg.Done()
-				r, err := gather(source, true)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error parsing %s: %s\n", source, err)
-					rc <- []*report{}
-					return
+				for _, source := range files {
+					r, err := gather(source, true)
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "error parsing %s: %s\n", source, err)
+						reportsChannel <- []*report{}
+						return
+					}
+					reportsChannel <- r
 				}
-				rc <- r
-			}(source)
+			}(files)
 		}
 
 		wg.Wait()
-		close(rc)
+		close(reportsChannel)
 	}()
 
-	for reports := range rc {
+	for reports := range reportsChannel {
 		for _, report := range reports {
 			fmt.Println(report)
 		}
 	}
+}
+
+func getFilesForEachCPUCore(files []string, cpuCount int) [][]string {
+	fileCount := len(files)
+
+	// early exit if only one file or one core exists -> no reason to use multithreading.
+	if cpuCount == 1 || fileCount == 1 {
+		return [][]string{files}
+	}
+
+	for (fileCount % cpuCount) != 0 {
+		cpuCount--
+	}
+
+	filesPerCPU := fileCount / cpuCount
+
+	fileParts := make([][]string, 0, cpuCount)
+	x := 0
+	for i := 0; i < cpuCount; i++ {
+		fileParts = append(fileParts, files[x:(x+filesPerCPU)])
+		x = x + filesPerCPU
+	}
+
+	return fileParts
 }
