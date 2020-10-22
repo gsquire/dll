@@ -94,7 +94,7 @@ func main() {
 
 	reportsChannel := make(chan []*report, fileCount)
 	cpuCount := runtime.NumCPU()
-	filesPerCore := getFilesForEachCPUCore(files, cpuCount)
+	filesPerCore := splitFilesIntoParts(files, cpuCount)
 
 	go func() {
 		var wg sync.WaitGroup
@@ -127,23 +127,22 @@ func main() {
 	}
 }
 
-func getFilesForEachCPUCore(files []string, cpuCount int) [][]string {
+func splitFilesIntoParts(files []string, parts int) [][]string {
 	fileCount := len(files)
 
-	// early exit if only one file or one core exists -> no reason to use multithreading.
-	if cpuCount == 1 || fileCount == 1 {
+	if parts == 1 || fileCount == 1 {
 		return [][]string{files}
 	}
 
-	for (fileCount % cpuCount) != 0 {
-		cpuCount--
+	for (fileCount % parts) != 0 {
+		parts--
 	}
 
-	filesPerCPU := fileCount / cpuCount
+	filesPerCPU := fileCount / parts
 
-	fileParts := make([][]string, 0, cpuCount)
+	fileParts := make([][]string, 0, parts)
 	x := 0
-	for i := 0; i < cpuCount; i++ {
+	for i := 0; i < parts; i++ {
 		fileParts = append(fileParts, files[x:(x+filesPerCPU)])
 		x = x + filesPerCPU
 	}

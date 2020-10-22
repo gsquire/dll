@@ -137,65 +137,65 @@ func TestErrorParsing(t *testing.T) {
 	}
 }
 
-func TestGetFilesForEachCPUCore(t *testing.T) {
+func Test_splitFilesIntoParts(t *testing.T) {
+	getFileArray := func(amount int) []string {
+		files := make([]string, 0, amount)
+		for i := 0; i < amount; i++ {
+			files = append(files, "foo")
+		}
+		return files
+	}
+
 	tests := []struct {
-		name     string
-		files    []string
-		cpuCount int
-		expected [][]string
+		name          string
+		files         []string
+		parts         int
+		expectedParts int
 	}{
 		{
-			name:     "One file one core",
-			files:    []string{"foo"},
-			cpuCount: 1,
-			expected: [][]string{{"foo"}},
+			name:          "should split one file into one part",
+			files:         getFileArray(1),
+			parts:         1,
+			expectedParts: 1,
 		},
 		{
-			name:     "Tow files one core",
-			files:    []string{"foo", "bar"},
-			cpuCount: 1,
-			expected: [][]string{{"foo", "bar"}},
+			name:          "should split two files into one part",
+			files:         getFileArray(2),
+			parts:         1,
+			expectedParts: 1,
 		},
 		{
-			name:     "Tow files four cores",
-			files:    []string{"foo", "bar"},
-			cpuCount: 4,
-			expected: [][]string{{"foo"}, {"bar"}},
+			name:          "should split two files into four part",
+			files:         getFileArray(2),
+			parts:         4,
+			expectedParts: 2,
 		},
 		{
-			name:     "One file tow cores",
-			files:    []string{"foo"},
-			cpuCount: 2,
-			expected: [][]string{{"foo"}},
+			name:          "should split one file into two part",
+			files:         getFileArray(1),
+			parts:         2,
+			expectedParts: 1,
 		},
 		{
-			name:     "Four files tow cores",
-			files:    []string{"foo", "bar", "foobar", "barfoo"},
-			cpuCount: 2,
-			expected: [][]string{{"foo", "bar"}, {"foobar", "barfoo"}},
+			name:          "should split four files into two part",
+			files:         getFileArray(4),
+			parts:         2,
+			expectedParts: 2,
 		},
 		{
-			name:     "Tow file three cores",
-			files:    []string{"foo", "bar"},
-			cpuCount: 3,
-			expected: [][]string{{"foo"}, {"bar"}},
+			name:          "should split two files into three part",
+			files:         getFileArray(2),
+			parts:         3,
+			expectedParts: 2,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := getFilesForEachCPUCore(test.files, test.cpuCount)
+			got := splitFilesIntoParts(test.files, test.parts)
 
-			if len(got) != len(test.expected) {
-				t.Fatalf("Expect parts to be equal. got: '%d' slices but expected '%d'", len(got), len(test.expected))
-			}
-
-			for oi, gotPart := range got {
-				for i, gotString := range gotPart {
-					if gotString != test.expected[oi][i] {
-						t.Fatalf("Want: %v\n\nGot: %v", test.expected, got)
-					}
-				}
+			if len(got) != test.expectedParts {
+				t.Fatalf("Expect to split into '%d' but got '%d'", test.expectedParts, len(got))
 			}
 		})
 	}
