@@ -1,7 +1,8 @@
-sudo: false
 language: go
+dist: bionic
+os: linux
 go:
-    - "1.13"
     - "1.14"
+    - "1.15"
 notifications:
     email: false
