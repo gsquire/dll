@@ -136,3 +136,97 @@ func TestErrorParsing(t *testing.T) {
 		t.Error("expected error but got nil")
 	}
 }
+
+func Test_splitArrayIntoParts(t *testing.T) {
+	getStringArray := func(amount int) []string {
+		strings := make([]string, 0, amount)
+		for i := 0; i < amount; i++ {
+			strings = append(strings, "foo")
+		}
+		return strings
+	}
+
+	tests := []struct {
+		name          string
+		strings       []string
+		parts         int
+		expectedParts int
+	}{
+		{
+			name:          "should split the array with one string into one part",
+			strings:       getStringArray(1),
+			parts:         1,
+			expectedParts: 1,
+		},
+		{
+			name:          "should split the array with one string into zero part",
+			strings:       getStringArray(1),
+			parts:         0,
+			expectedParts: 1,
+		},
+		{
+			name:          "should split the array with two strings into one part",
+			strings:       getStringArray(2),
+			parts:         1,
+			expectedParts: 1,
+		},
+		{
+			name:          "should split the array with two strings into four part",
+			strings:       getStringArray(2),
+			parts:         4,
+			expectedParts: 2,
+		},
+		{
+			name:          "should split the array with one string into two part",
+			strings:       getStringArray(1),
+			parts:         2,
+			expectedParts: 1,
+		},
+		{
+			name:          "should split the array with four strings into two part",
+			strings:       getStringArray(4),
+			parts:         2,
+			expectedParts: 2,
+		},
+		{
+			name:          "should split the array with two strings into three part",
+			strings:       getStringArray(2),
+			parts:         3,
+			expectedParts: 2,
+		},
+		{
+			name:          "should split the array with ten strings into three part",
+			strings:       getStringArray(10),
+			parts:         3,
+			expectedParts: 3,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := splitArrayIntoParts(test.strings, test.parts)
+
+			if len(got) != test.expectedParts {
+				t.Fatalf("Expect to split the array into '%d' but got '%d'", test.expectedParts, len(got))
+			}
+
+			for _, files := range got {
+				if len(files) < 1 {
+					t.Fatalf("Expected to contain at least on string but got none")
+				}
+			}
+		})
+	}
+
+	t.Run("should split the empty array into one part", func(t *testing.T) {
+		strings := []string{}
+		parts := 1
+
+		got := len(splitArrayIntoParts(strings, parts))
+		want := 1
+
+		if got != want {
+			t.Fatalf("Expected a length of %d but got %d", want, got)
+		}
+	})
+}

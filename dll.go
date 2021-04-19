@@ -6,6 +6,8 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"runtime"
+	"sync"
 )
 
 type report struct {
@@ -84,16 +86,80 @@ func gather(source string, asFile bool) ([]*report, error) {
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Fprintln(os.Stderr, "no source files supplied")
+		os.Exit(1)
 	}
 
-	for _, source := range os.Args[1:] {
+	files := os.Args[1:]
+	fileCount := len(files)
+
+	reportsChannel := make(chan []*report, fileCount)
+	cpuCount := runtime.NumCPU()
+	filesPerCore := splitArrayIntoParts(files, cpuCount)
+
+	go func() {
+		var wg sync.WaitGroup
+
+		for _, files := range filesPerCore {
+			wg.Add(1)
+			go analyseFiles(files, reportsChannel, &wg)
+		}
+
+		wg.Wait()
+		close(reportsChannel)
+	}()
+
+	for reports := range reportsChannel {
+		printReports(reports)
+	}
+}
+
+func analyseFiles(files []string, c chan []*report, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for _, source := range files {
 		r, err := gather(source, true)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error parsing %s: %s\n", source, err)
-			continue
+			c <- []*report{}
+			return
 		}
-		for _, rep := range r {
-			fmt.Println(rep)
+		c <- r
+	}
+}
+
+func printReports(reports []*report) {
+	for _, report := range reports {
+		fmt.Println(report)
+	}
+}
+
+func splitArrayIntoParts(array []string, parts int) [][]string {
+	arraySize := len(array)
+
+	if parts <= 1 {
+		return [][]string{array}
+	}
+
+	// if there are more parts than strings, it tries to find the next smallest number to destribute them equally.
+	if arraySize < parts {
+		for (arraySize % parts) != 0 {
+			parts--
 		}
 	}
+
+	stringsPerPart := arraySize / parts
+	arrayParts := make([][]string, 0, parts)
+	lastIndex := 0
+	for i := 0; i < parts; i++ {
+		arrayParts = append(arrayParts, array[lastIndex:(lastIndex+stringsPerPart)])
+		lastIndex = lastIndex + stringsPerPart
+	}
+
+	// if not all strings could be splitted equally it will adds the missing ones to the first part.
+	if stringsPerPart*parts != arraySize {
+		firstpart := arrayParts[0]
+		firstpart = append(firstpart, array[stringsPerPart*parts:]...)
+		arrayParts[0] = firstpart
+	}
+
+	return arrayParts
 }
