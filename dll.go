@@ -14,7 +14,7 @@ type report struct {
 }
 
 func (r *report) String() string {
-	return fmt.Sprintf("%s: found defer statement in for loop at line number: %d", r.sourceName, r.lineNumber)
+	return fmt.Sprintf("%s:%d found defer statement in for loop", r.sourceName, r.lineNumber)
 }
 
 type visitFunc func(ast.Node) ast.Visitor
