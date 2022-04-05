@@ -2,8 +2,6 @@
 
 **D**efer **L**oop **L**inter
 
-[![Build Status](https://travis-ci.org/gsquire/dll.svg?branch=master)](https://travis-ci.org/gsquire/dll)
-
 A simple linter to find `defer` statements inside of for loops in Go source.
 
 ## Why?
