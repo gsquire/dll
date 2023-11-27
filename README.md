@@ -5,7 +5,7 @@
 A simple linter to find `defer` statements inside of for loops in Go source.
 
 ## Other Works
-See #12 for an existing tool (`staticcheck`).
+See [Issue #12](https://github.com/gsquire/dll/issues/12) for an existing tool (`staticcheck`).
 
 ## Why?
 It's often erroneous to use `defer` inside of a loop as it can lead to memory leaks or other
